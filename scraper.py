@@ -1,8 +1,7 @@
 import time
 from selenium import webdriver
-from selenium.common.exceptions import ElementClickInterceptedException, NoSuchElementException, StaleElementReferenceException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
 from pandas import DataFrame
 
 PATH = "C:/Program Files (x86)/chromedriver.exe"
@@ -31,7 +30,6 @@ def get_jobs(keyword, num_jobs, verbose):
     def removeSurvey():
         try:
             driver.find_element(By.CLASS_NAME, "delighted-web-survey-close-btn").click()
-            signed = True
         except NoSuchElementException:
             pass
         
@@ -55,15 +53,13 @@ def get_jobs(keyword, num_jobs, verbose):
 
     while len(jobs) < num_jobs:
         removeSignIn()
-
         page_jobs = driver.find_elements_by_class_name("react-job-listing")
-        print(len(page_jobs))
 
         for j in page_jobs:
-            print(f"Progress: {str(len(jobs)+1)} / {str(num_jobs)}")
-
             if(len(jobs) >= num_jobs):
                 break
+
+            print(f"Progress: {str(len(jobs)+1)} / {str(num_jobs)}")
 
             removeSignIn()
             j.click()
@@ -71,15 +67,17 @@ def get_jobs(keyword, num_jobs, verbose):
 
             data = {}
             data["company name"] = getValue("css-87uc0g").split('\n')[0]
+            data["rating"] = getValue("css-ey2fjr")
             data["job title"] = getValue("css-1vg6q84")
             data["location"] = getValue("css-56kyx5")
             data["salary"] = getValue("css-16kxj2j")
 
             try:
                 for c in driver.find_elements(By.CLASS_NAME, "css-rmzuhb"):
-                    text = c.text
-                    # data[c.text.split('\n')[0]] = c.text.split('\n')[1]           
+                    data[c.text.split('\n')[0]] = c.text.split('\n')[1]           
             except NoSuchElementException:
+                pass
+            except StaleElementReferenceException:
                 pass
 
             jobs.append(data)
